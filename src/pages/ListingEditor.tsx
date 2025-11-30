@@ -165,22 +165,58 @@ const ListingEditor = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="aspect-square rounded-lg overflow-hidden mb-4 bg-muted group">
-                    {post.media_type === "VIDEO" ? (
-                      <video
-                        src={post.media_url}
-                        className="w-full h-full object-cover"
-                        controls
-                      />
-                    ) : (
-                      <img
-                        src={post.media_url}
-                        alt="Instagram post"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    )}
+                    {(() => {
+                      // Handle Instagram posts
+                      if (post.media_url) {
+                        return post.media_type === "VIDEO" ? (
+                          <video
+                            src={post.media_url}
+                            className="w-full h-full object-cover"
+                            controls
+                          />
+                        ) : (
+                          <img
+                            src={post.media_url}
+                            alt="Social media post"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        );
+                      }
+                      
+                      // Handle Facebook posts
+                      const attachment = post.attachments?.data?.[0];
+                      const mediaUrl =
+                        post.full_picture ||
+                        attachment?.media_url ||
+                        attachment?.media?.image?.src ||
+                        attachment?.media?.source ||
+                        attachment?.url ||
+                        attachment?.subattachments?.data?.[0]?.media?.image?.src ||
+                        attachment?.subattachments?.data?.[0]?.media?.source;
+                      
+                      if (mediaUrl) {
+                        return (
+                          <img
+                            src={mediaUrl}
+                            alt="Social media post"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23f0f0f0' width='400' height='400'/%3E%3Ctext fill='%23999' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif'%3EImage not available%3C/text%3E%3C/svg%3E";
+                            }}
+                          />
+                        );
+                      }
+                      
+                      // Fallback placeholder
+                      return (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          No image available
+                        </div>
+                      );
+                    })()}
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {post.caption}
+                    {post.caption || post.message}
                   </p>
                 </CardContent>
               </Card>

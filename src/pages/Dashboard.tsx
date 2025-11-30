@@ -140,15 +140,20 @@ const Dashboard = () => {
     try {
       let imageFile: File | undefined;
 
-      // Mirror Instagram logic: only fetch a single direct image URL.
-      // Prefer full_picture (direct CDN link) and fall back to first attachment media.image.src.
       const attachment = post.attachments?.data?.[0];
-      const directImageUrl = post.full_picture || attachment?.media?.image?.src || attachment?.media_url;
-      const mediaType = (attachment?.media_type || attachment?.type || "").toLowerCase();
+      const mediaUrl =
+        post.full_picture ||
+        attachment?.media_url ||
+        attachment?.media?.image?.src ||
+        attachment?.media?.source ||
+        attachment?.url ||
+        attachment?.subattachments?.data?.[0]?.media?.image?.src ||
+        attachment?.subattachments?.data?.[0]?.media?.source;
+      const mediaType = attachment?.media_type || attachment?.type;
 
-      if (directImageUrl && (mediaType.includes("photo") || mediaType === "image" || post.full_picture)) {
+      if (mediaUrl) {
         try {
-          const imageResponse = await fetch(directImageUrl);
+          const imageResponse = await fetch(mediaUrl);
           const imageBlob = await imageResponse.blob();
           imageFile = new File([imageBlob], "facebook-post.jpg", {
             type: imageBlob.type || "image/jpeg",
